@@ -20,14 +20,14 @@ public class Service {
 	}
 	
 	public Setting getSettingByName(String settingName){
-		return localDB.get(settingName.trim().toUpperCase());
+		return localDB.get(settingName.trim());
 	}
 
 	public boolean createSetting(Setting setting){
 		
 		validateSetting(setting);
 		
-		String settingName = setting.getName().trim().toUpperCase();
+		String settingName = setting.getName().trim();
 		
 		if(getSettingByName(settingName) != null){
 			throw new IllegalArgumentException("setting with name already exists");

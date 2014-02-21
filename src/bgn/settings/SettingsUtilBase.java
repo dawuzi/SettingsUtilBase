@@ -1,13 +1,14 @@
 package bgn.settings;
 
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,21 +153,24 @@ public abstract class SettingsUtilBase<T> {
 	
     private void verifyField(T obj, String field) {
 		getProperty(obj, field);
+		setProperty(obj, field, null);
 	}
 	
-	private Object getProperty(Object setting, String field){
+	private Object getProperty(Object setting, String fieldName){
 		try {
-			return PropertyUtils.getProperty(setting, field);
+			Method method = new PropertyDescriptor(fieldName, clazz).getReadMethod();
+			return method.invoke(setting);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-    		throw new UtilException("cannot find getter for field "+field+" for class "+clazz.getCanonicalName(), e);
+    		throw new UtilException("cannot find getter for field -"+fieldName+"- for class "+clazz.getCanonicalName(), e);
 		}
 	}
 	private void setProperty(Object setting, String fieldName, Object value){
 		try {
-			PropertyUtils.setProperty(setting, fieldName, value);
+			Method method = new PropertyDescriptor(fieldName, clazz).getWriteMethod();
+			method.invoke(setting, value);
 		} catch (Exception e) {
-    		throw new UtilException("cannot find setter for field "+fieldName+" for class "+clazz.getCanonicalName(), e);
+    		throw new UtilException("cannot find setter for field -"+fieldName+"- for class "+clazz.getCanonicalName(), e);
 		} 
 	}
 	
@@ -213,7 +217,7 @@ public abstract class SettingsUtilBase<T> {
         
         try{
         
-	        settingName = settingName.toUpperCase().trim();
+	        settingName = settingName.trim();
 	
 	        T setting = null;
 	        
