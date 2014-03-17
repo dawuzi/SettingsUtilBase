@@ -27,8 +27,12 @@ public abstract class GridSettingsUtilBase<T> extends SettingsUtilBase<T> {
 		this(false, clazz, orderedGridUniqueSettingsFields);
 	}
 
-	public abstract T getSettingByName(String settingName,Object... orderedGridUniqueSettingsValues) throws Exception;
+	protected abstract T getSettingByName(String settingName,Object... orderedGridUniqueSettingsValues) throws Exception;
 
+    public T getByName(String settingName,Object... orderedGridUniqueSettingsValues){
+    	return super.getByName(settingName, orderedGridUniqueSettingsValues); 
+    }
+	
 	@Override
 	public T getSettingByName(String settingName, String defaultValue,
 			String defaultDescription, boolean createIfNotExist,

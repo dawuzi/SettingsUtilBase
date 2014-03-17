@@ -22,52 +22,39 @@ public abstract class SimpleSettingsUtilBase<T> extends SettingsUtilBase<T> {
 		super(cacheSetting, clazz);
 	}
 
-    public abstract T getSettingByName(String settingName) throws Exception;
+    protected abstract T getSettingByName(String settingName) throws Exception;
 	
 	@Override
-	protected T getSettingByName(String settingName,
-			Object... orderedGridUniqueSettingsValues) throws Exception {
-		// TODO Auto-generated method stub
+	protected T getSettingByName(String settingName, Object... orderedGridUniqueSettingsValues) throws Exception {
 		return getSettingByName(settingName);
 	}
+
+    public T getByName(String settingName){
+    	return super.getByName(settingName); 
+    }
 	
-	public T getSettingByName(String settingName, String defaultValue,
-			String defaultDescription, boolean createIfNotExist) {
-		// TODO Auto-generated method stub
-		return super.getSettingByName(settingName, defaultValue, defaultDescription,
-				createIfNotExist);
+	public T getSettingByName(String settingName, String defaultValue, String defaultDescription, boolean createIfNotExist) {
+		return super.getSettingByName(settingName, defaultValue, defaultDescription, createIfNotExist);
 	}
 
-	public String getSettingValue(String settingName, String defaultValue,
-			String defaultDescription, boolean createIfNotExist) {
-		// TODO Auto-generated method stub
+	public String getSettingValue(String settingName, String defaultValue, String defaultDescription, boolean createIfNotExist) {
 		return super.getSettingValue(settingName, defaultValue, defaultDescription,createIfNotExist);
 	}
 
-	public Integer getSettingIntValue(String settingName, Integer defaultValue,
-			String defaultDescription, boolean createIfNotExist) {
-		// TODO Auto-generated method stub
+	public Integer getSettingIntValue(String settingName, Integer defaultValue, String defaultDescription, boolean createIfNotExist) {
 		return super.getSettingIntValue(settingName, defaultValue, defaultDescription,createIfNotExist);
 	}
 
-	public Long getSettingLongValue(String settingName, Long defaultValue,
-			String defaultDescription, boolean createIfNotExist) {
-		// TODO Auto-generated method stub
+	public Long getSettingLongValue(String settingName, Long defaultValue, String defaultDescription, boolean createIfNotExist) {
 		return super.getSettingLongValue(settingName, defaultValue, defaultDescription,createIfNotExist);
 	}
 
-	public Float getSettingFloatValue(String settingName, Float defaultValue,
-			String defaultDescription, boolean createIfNotExist) {
-		// TODO Auto-generated method stub
+	public Float getSettingFloatValue(String settingName, Float defaultValue, String defaultDescription, boolean createIfNotExist) {
 		return super.getSettingFloatValue(settingName, defaultValue,defaultDescription, createIfNotExist);
 	}
 	
-	public Boolean getSettingBooleanValue(String settingName,
-			Boolean defaultValue, String defaultDescription,
-			boolean createIfNotExist) {
-		// TODO Auto-generated method stub
-		return super.getSettingBooleanValue(settingName, defaultValue,
-				defaultDescription, createIfNotExist);
+	public Boolean getSettingBooleanValue(String settingName, Boolean defaultValue, String defaultDescription, boolean createIfNotExist) {
+		return super.getSettingBooleanValue(settingName, defaultValue, defaultDescription, createIfNotExist);
 	}
 
 }

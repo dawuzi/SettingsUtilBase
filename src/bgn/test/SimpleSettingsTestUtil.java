@@ -12,7 +12,7 @@ public class SimpleSettingsTestUtil extends SimpleSettingsUtilBase<Setting>{
 	}
 
 	@Override
-	public Setting getSettingByName(String settingName) throws Exception {
+	protected Setting getSettingByName(String settingName) throws Exception {
 		// TODO Auto-generated method stub
 		return service.getSettingByName(settingName);
 	}
@@ -29,4 +29,8 @@ public class SimpleSettingsTestUtil extends SimpleSettingsUtilBase<Setting>{
 		return service.updateSetting(setting);
 	}
 
+	protected Boolean updateSetting2(Setting setting) throws Exception {
+		// TODO Auto-generated method stub
+		return service.updateSetting(setting);
+	}
 }

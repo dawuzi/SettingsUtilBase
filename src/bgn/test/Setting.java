@@ -16,8 +16,7 @@ public class Setting {
 		this.value = value;
 		this.description = description;
 	}
-	public Setting(String name, String value, String description,
-			Company company) {
+	public Setting(String name, String value, String description, Company company) {
 		super();
 		this.name = name;
 		this.value = value;

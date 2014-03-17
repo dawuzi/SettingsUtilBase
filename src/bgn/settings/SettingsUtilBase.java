@@ -173,25 +173,28 @@ public abstract class SettingsUtilBase<T> {
     		throw new UtilException("cannot find setter for field -"+fieldName+"- for class "+clazz.getCanonicalName(), e);
 		} 
 	}
-	
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private List getList(Object settingName, Object... objs) throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException{
+	private List getList(Object settingName, Object... objs) 
+			throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException{
+		
 		List list = new ArrayList();
-		
+
 		list.add(BeanUtils.cloneBean(settingName));
-		
-		for(Object o : objs){
-			if(o != null){
-				list.add(BeanUtils.cloneBean(o));
-			}
-			else{
-				list.add(o);
+
+		if(objs != null){
+			for(Object o : objs){
+				if(o != null){
+					list.add(BeanUtils.cloneBean(o));
+				}
+				else{
+					list.add(o);
+				}
 			}
 		}
-		
 		return list;
 	}
-	
+
 	protected T getSettingByName(String settingName, String defaultValue, 
 			String defaultDescription, boolean createIfNotExist, Object... orderedGridUniqueSettingsValues){
         
@@ -199,21 +202,7 @@ public abstract class SettingsUtilBase<T> {
             throw new IllegalArgumentException("setting name is empty");
         }
         
-        if(orderedGridUniqueSettingsValues != null && orderedGridUniqueSettingsValues.length > 0){
-        	
-        	if(orderedGridUniqueSettingsFields == null){
-                throw new IllegalArgumentException("you cannot pass in an orderedGridUniqueSettingsValues" +
-                		" when there are no orderedGridUniqueSettingsFields in the constructor." +
-                		" Pass in the corresponding strings of orderedGridUniqueSettingsFields" +
-                		" in the constuctor.");
-        	}
-        	
-        	if(orderedGridUniqueSettingsFields.length != orderedGridUniqueSettingsValues.length){
-        		throw new IllegalArgumentException("The orderedGridUniqueSettingsFields and " +
-        				"orderedGridUniqueSettingsValues dont match. They need to match in both " +
-        				"order and length. Null values can be used for fields you wish to be null");
-        	}
-        }
+        validateOrderedGridUniqueSettingsValues(orderedGridUniqueSettingsValues);
         
         try{
         
@@ -257,6 +246,7 @@ public abstract class SettingsUtilBase<T> {
 		            	}
 		            }
 	        	}
+	        	
 	            return setting;
 	            
 	        } 
@@ -288,20 +278,23 @@ public abstract class SettingsUtilBase<T> {
 	
 	            createSetting(setting);
 	            
-	            Object prevSetting = settingsCache.put(getList(settingName, orderedGridUniqueSettingsValues), setting);
+	        	if(cacheSetting){
 	            
-	            if(prevSetting != null){
-	            	if(!showOnlyErrorLogs){
-		                log.warn("A previous setting with name -"
-		                        +settingName+"- was removed from the settingCache");
-	            	}
-	            }else{
-	            	if(!showOnlyErrorLogs){
-		                log.debug("Adding a new setting with name -"
-		                        +settingName+"- to settingCache, value = -"+getProperty(setting,VALUE)+"-");
-	            	}
-	            }
-	
+		            Object prevSetting = settingsCache.put(getList(settingName, orderedGridUniqueSettingsValues), setting);
+		            
+		            if(prevSetting != null){
+		            	if(!showOnlyErrorLogs){
+			                log.warn("A previous setting with name -"
+			                        +settingName+"- was removed from the settingCache");
+		            	}
+		            }else{
+		            	if(!showOnlyErrorLogs){
+			                log.debug("Adding a new setting with name -"
+			                        +settingName+"- to settingCache, value = -"+getProperty(setting,VALUE)+"-");
+		            	}
+		            }
+	        	}
+	        	
 	            return setting;
 	        }
 	        
@@ -590,4 +583,124 @@ public abstract class SettingsUtilBase<T> {
     protected boolean ignoreDescription(){
     	return false;
     }
+    
+    public boolean create(T setting){
+    	try {
+			
+    		boolean create = createSetting(setting);
+    		
+    		if(cacheSetting){
+    			cacheSetting(setting);
+    		}
+    		
+    		return create;
+		} catch (Exception e) {
+    		throw new UtilException("error creating setting", e);
+		}
+    }
+    
+    public boolean update(T setting){
+    	try {
+			
+    		boolean update = updateSetting(setting);
+    		
+    		if(cacheSetting){
+    			cacheSetting(setting);
+    		}
+    		
+    		return update;
+		} catch (Exception e) {
+    		throw new UtilException("error updating setting", e);
+		}
+    }
+    
+    protected T getByName(String settingName, Object... orderedGridUniqueSettingsValues){
+
+    	try{
+    		
+    		validateOrderedGridUniqueSettingsValues(orderedGridUniqueSettingsValues);
+    		
+    		T setting = getSettingByName(settingName, orderedGridUniqueSettingsValues);
+    		
+    		if(cacheSetting){
+    			cacheSetting(setting);
+    		}
+    		
+    		return setting;
+    		
+    	} catch (Exception e) {
+    		throw new UtilException("error getting by setting", e);
+    	}
+
+    }
+
+    private void cacheSetting(T setting) 
+    		throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException{
+
+    	String settingName = (String) getProperty(setting, NAME);
+
+    	settingName = settingName.trim();
+
+
+    	int lengthOfOrderedGridUniqueSettingsFields = 0;
+
+		if(orderedGridUniqueSettingsFields != null){
+			lengthOfOrderedGridUniqueSettingsFields = orderedGridUniqueSettingsFields.length;
+		}
+
+		Object[] orderedGridUniqueSettingsValues = new Object[lengthOfOrderedGridUniqueSettingsFields];
+		
+    	for(int x=0; x<lengthOfOrderedGridUniqueSettingsFields; x++){
+    		
+    		String field = orderedGridUniqueSettingsFields[x];
+    		
+    		Object fieldVal = getProperty(setting, field);
+    		
+    		orderedGridUniqueSettingsValues[x] = fieldVal;
+    	}
+    	
+        Object prevSetting = settingsCache.put(getList(settingName, orderedGridUniqueSettingsValues), setting);
+        
+        if(prevSetting != null){
+        	if(!showOnlyErrorLogs){
+                log.warn("A previous setting with name -"
+                        +settingName+"- was removed from the settingCache");
+        	}
+        }else{
+        	if(!showOnlyErrorLogs){
+                log.debug("Adding a new setting with name -"
+                        +settingName+"- to settingCache, value = -"+getProperty(setting,VALUE)+"-");
+        	}
+        }
+    }
+    
+    public void validateOrderedGridUniqueSettingsValues(Object... orderedGridUniqueSettingsValues){
+    	
+        if(orderedGridUniqueSettingsValues != null && orderedGridUniqueSettingsValues.length > 0){
+        	
+        	if(orderedGridUniqueSettingsFields == null){
+                throw new IllegalArgumentException("you cannot pass in an orderedGridUniqueSettingsValues" +
+                		" when there are no orderedGridUniqueSettingsFields in the constructor." +
+                		" Pass in the corresponding strings of orderedGridUniqueSettingsFields" +
+                		" in the constuctor.");
+        	}
+        	
+        	if(orderedGridUniqueSettingsFields.length != orderedGridUniqueSettingsValues.length){
+        		throw new IllegalArgumentException("The orderedGridUniqueSettingsFields and " +
+        				"orderedGridUniqueSettingsValues dont match. They need to match in both " +
+        				"order and length. Null values can be used for fields you wish to be null");
+        	}
+        	
+	    }
+        else{
+        	if(orderedGridUniqueSettingsFields != null && orderedGridUniqueSettingsFields.length > 0){
+                throw new IllegalArgumentException("you cannot pass in an orderedGridUniqueSettingsValues" +
+                		" when there are no orderedGridUniqueSettingsFields in the constructor." +
+                		" Pass in the corresponding strings of orderedGridUniqueSettingsFields" +
+                		" in the constuctor.");
+        	}
+        }
+    
+    }
+    
 }
