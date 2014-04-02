@@ -620,7 +620,21 @@ public abstract class SettingsUtilBase<T> {
     		
     		validateOrderedGridUniqueSettingsValues(orderedGridUniqueSettingsValues);
     		
-    		T setting = getSettingByName(settingName, orderedGridUniqueSettingsValues);
+    		T setting;
+    		
+	        if(cacheSetting){
+		        setting = settingsCache.get(getList(settingName, orderedGridUniqueSettingsValues));
+		        
+		        if(setting != null){
+	            	if(!showOnlyErrorLogs){
+			            log.debug("returning setting with name -"
+			                    +settingName+"- from settingCache");
+	            	}
+		            return setting;
+		        }
+	        }
+    		
+	        setting = getSettingByName(settingName, orderedGridUniqueSettingsValues);
     		
     		if(cacheSetting){
     			cacheSetting(setting);
