@@ -67,47 +67,47 @@ public abstract class SimpleSettingsUtilBase<T> extends SettingsUtilBase<T> {
 		return super.getSettingByName(enumObject);
 	}
 
-	protected T getSettingByName(Enum<?> enumObject, String defaultValue, boolean createIfNotExist) {
+	public T getSettingByName(Enum<?> enumObject, String defaultValue, boolean createIfNotExist) {
 		return super.getSettingByName(enumObject, defaultValue,createIfNotExist);
 	}
 
-	protected String getSettingValue(Enum<?> enumObject) {
+	public String getSettingValue(Enum<?> enumObject) {
 		return super.getSettingValue(enumObject);
 	}
 
-	protected String getSettingValue(Enum<?> enumObject, String defaultValue, boolean createIfNotExist) {
+	public String getSettingValue(Enum<?> enumObject, String defaultValue, boolean createIfNotExist) {
 		return super.getSettingValue(enumObject, defaultValue,createIfNotExist);
 	}
 	
-	protected Integer getSettingIntValue(Enum<?> enumObject) {
+	public Integer getSettingIntValue(Enum<?> enumObject) {
 		return super.getSettingIntValue(enumObject);
 	}
 
-	protected Integer getSettingIntValue(Enum<?> enumObject, Integer defaultValue, boolean createIfNotExist) {
+	public Integer getSettingIntValue(Enum<?> enumObject, Integer defaultValue, boolean createIfNotExist) {
 		return super.getSettingIntValue(enumObject, defaultValue,createIfNotExist);
 	}
 
-	protected Long getSettingLongValue(Enum<?> enumObject) {
+	public Long getSettingLongValue(Enum<?> enumObject) {
 		return super.getSettingLongValue(enumObject);
 	}
 
-	protected Long getSettingLongValue(Enum<?> enumObject, Long defaultValue, boolean createIfNotExist) {
+	public Long getSettingLongValue(Enum<?> enumObject, Long defaultValue, boolean createIfNotExist) {
 		return super.getSettingLongValue(enumObject, defaultValue,createIfNotExist);
 	}
 
-	protected Float getSettingFloatValue(Enum<?> enumObject) {
+	public Float getSettingFloatValue(Enum<?> enumObject) {
 		return super.getSettingFloatValue(enumObject);
 	}
 
-	protected Float getSettingFloatValue(Enum<?> enumObject, Float defaultValue, boolean createIfNotExist) {
+	public Float getSettingFloatValue(Enum<?> enumObject, Float defaultValue, boolean createIfNotExist) {
 		return super.getSettingFloatValue(enumObject, defaultValue,createIfNotExist);
 	}
 	
-	protected Boolean getSettingBooleanValue(Enum<?> enumObject) {
+	public Boolean getSettingBooleanValue(Enum<?> enumObject) {
 		return super.getSettingBooleanValue(enumObject);
 	}
 
-	protected Boolean getSettingBooleanValue(Enum<?> enumObject, Boolean defaultValue, boolean createIfNotExist) {
+	public Boolean getSettingBooleanValue(Enum<?> enumObject, Boolean defaultValue, boolean createIfNotExist) {
 		return super.getSettingBooleanValue(enumObject, defaultValue,createIfNotExist);
 	}
 	
