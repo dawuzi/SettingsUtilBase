@@ -1,8 +1,6 @@
 package bgn.settings;
 
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import bgn.exception.UtilException;
+import bgn.settings.util.SUBUtils;
 
 
 /**
@@ -35,19 +34,22 @@ public abstract class SettingsUtilBase<T> {
     @SuppressWarnings("rawtypes")
 	private final Map<List,T> settingsCache = new HashMap<List, T>()  ;
     private final Logger log = LoggerFactory.getLogger(SettingsUtilBase.class);
-    private final boolean cacheSetting ;
-    private Class<T> clazz;
-    private String[] orderedGridUniqueSettingsFields ;
-    private final boolean showOnlyErrorLogs ;
+    protected final boolean cacheSetting ;
+    protected final Class<T> clazz;
+    protected final String[] orderedGridUniqueSettingsFields ;
+    protected final boolean showOnlyErrorLogs ;
     
-    private final boolean ignoreDescription;
+    protected final boolean ignoreDescription;
     
-    private final String NAME;
-    private final String VALUE;
-    private final String DESCRIPTION;
+    protected final String NAME;
+    protected final String VALUE;
+    protected final String DESCRIPTION;
     
-    private final String TRUE;
-    private final String FALSE;
+    protected final String TRUE;
+    protected final String FALSE;
+    
+    private final List<EnumFields> allowedEnumFields;
+    private final List<Class<?>> allowedEnumClasses;
     
     protected abstract T getSettingByName(String settingName, Object... orderedGridUniqueSettingsValues) throws Exception;
     protected abstract boolean createSetting(T setting) throws Exception;
@@ -71,9 +73,13 @@ public abstract class SettingsUtilBase<T> {
     	ignoreDescription = ignoreDescription();
     	
     	validateSettingObjectType();
+    	
+    	allowedEnumFields = getAllowedSettingsEnum();
+    	allowedEnumClasses = getEnumClasses(allowedEnumFields);
+    	validateAllowedEnumFields();
     }
 
-    private void validateTrueAndFalseValues() {
+	private void validateTrueAndFalseValues() {
 		String trueVal = getTrueValue();
 		String falseVal = getFalseValue();
 		
@@ -93,7 +99,6 @@ public abstract class SettingsUtilBase<T> {
      * @return a boolean
      */
     protected boolean showOnlyErrorLogs() {
-		// TODO Auto-generated method stub
 		return true;
 	}
 	private void validateSettingObjectType() {
@@ -157,21 +162,10 @@ public abstract class SettingsUtilBase<T> {
 	}
 	
 	private Object getProperty(Object setting, String fieldName){
-		try {
-			Method method = new PropertyDescriptor(fieldName, clazz).getReadMethod();
-			return method.invoke(setting);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-    		throw new UtilException("cannot find getter for field -"+fieldName+"- for class "+clazz.getCanonicalName(), e);
-		}
+		return SUBUtils.getProperty(clazz, setting, fieldName);
 	}
 	private void setProperty(Object setting, String fieldName, Object value){
-		try {
-			Method method = new PropertyDescriptor(fieldName, clazz).getWriteMethod();
-			method.invoke(setting, value);
-		} catch (Exception e) {
-    		throw new UtilException("cannot find setter for field -"+fieldName+"- for class "+clazz.getCanonicalName(), e);
-		} 
+		SUBUtils.setProperty(clazz, setting, fieldName, value);
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -360,7 +354,7 @@ public abstract class SettingsUtilBase<T> {
             defValInUse = String.valueOf(defaultValue);
         }
         
-        String val = getSettingValue(settingName, defValInUse, defaultDescription, createIfNotExist);
+        String val = getSettingValue(settingName, defValInUse, defaultDescription, createIfNotExist, orderedGridUniqueSettingsValues);
         if (val != null){
             try {
                 return Integer.parseInt(val);
@@ -388,7 +382,7 @@ public abstract class SettingsUtilBase<T> {
             defValInUse = String.valueOf(defaultValue);
         }
         
-        String val = getSettingValue(settingName, defValInUse, defaultDescription, createIfNotExist);
+        String val = getSettingValue(settingName, defValInUse, defaultDescription, createIfNotExist, orderedGridUniqueSettingsValues);
         if (val != null){
             try {
                 return Long.parseLong(val);
@@ -417,7 +411,7 @@ public abstract class SettingsUtilBase<T> {
             defValInUse = String.valueOf(defaultValue);
         }
         
-        String val = getSettingValue(settingName, defValInUse, defaultDescription, createIfNotExist);
+        String val = getSettingValue(settingName, defValInUse, defaultDescription, createIfNotExist, orderedGridUniqueSettingsValues);
         if (val != null){
             try {
                 return Float.parseFloat(val);
@@ -494,7 +488,7 @@ public abstract class SettingsUtilBase<T> {
 	        	}
 	        }
 	        
-	        String val = getSettingValue(settingName, defValInUse, defaultDescription, createIfNotExist);
+	        String val = getSettingValue(settingName, defValInUse, defaultDescription, createIfNotExist, orderedGridUniqueSettingsValues);
 	        
 	        if (val != null){
 	            
@@ -651,6 +645,13 @@ public abstract class SettingsUtilBase<T> {
     private void cacheSetting(T setting) 
     		throws IllegalAccessException, InstantiationException, InvocationTargetException, NoSuchMethodException{
 
+    	if(setting == null){
+        	if(!showOnlyErrorLogs){
+                log.warn("null argument for cacheSetting method for setting class : "+clazz.getName());
+        	}
+    		return;
+    	}
+    	
     	String settingName = (String) getProperty(setting, NAME);
 
     	settingName = settingName.trim();
@@ -715,6 +716,255 @@ public abstract class SettingsUtilBase<T> {
         	}
         }
     
+    }
+    
+    protected  List<EnumFields> getAllowedSettingsEnum(){
+    	return null;
+    }
+    
+	private SettingsReplica getSettingsReplica(Enum<?> enumObject, Object value, Boolean createIfNotExist) {
+		Class<?> enumClazz = enumObject.getClass();
+		EnumFields enumField = getEnumField(enumClazz);
+		if(value == null){
+			value =  (String) SUBUtils.getProperty(enumClazz, enumObject, enumField.getDefaultValueFieldName());
+		}
+		if(createIfNotExist == null){
+			createIfNotExist = (Boolean) SUBUtils.getProperty(enumClazz, enumObject, enumField.getCreateIfNotExistFieldName());
+		}
+		String description = null;
+		if(!ignoreDescription){
+			description = (String) SUBUtils.getProperty(enumClazz, enumObject, enumField.getDefaultDescriptionFieldName());
+		}
+		String name = enumObject.name();
+		
+		return new SettingsReplica(name, value.toString(), description, createIfNotExist);
+	}
+    
+    private void validateAllowedEnumFields() {
+    	
+    	if(allowedEnumClasses == null || allowedEnumClasses.isEmpty()){
+    		return;
+    	}
+    	
+    	if(ignoreDescription()){
+    		return;
+    	}
+    	
+//    	validate the earlier skipped description field now
+    	for(Class<?> clazz : allowedEnumClasses){
+    		
+    		Object[] enumConstants = clazz.getEnumConstants();
+    		
+    		EnumFields enumField = getEnumField(clazz);
+    		
+    		if(enumConstants.length == 0){
+    			if(!showOnlyErrorLogs){
+        			log.warn("This enum class "+clazz.getName()+" does not have any enum elements");
+    			}
+    		}else{
+    			Object object = enumConstants[0];
+    			SUBUtils.getProperty(clazz, object, enumField.getDefaultDescriptionFieldName());
+    		}    		
+    	}
+    	
+	}
+	
+    private List<Class<?>> getEnumClasses(List<EnumFields> allowedEnumFields) {
+		if(allowedEnumFields == null || allowedEnumFields.isEmpty()){
+			if(!showOnlyErrorLogs){
+				log.debug("allowedEnumFields is null or empty : "+allowedEnumFields+", for settings class "+clazz.getName());
+			}
+			return null;
+		}
+		
+		List<Class<?>> enumClasses = new ArrayList<Class<?>>();
+		
+		for(EnumFields anEnumField : allowedEnumFields){
+			
+			if(!enumClasses.contains(anEnumField.getEnumClass())){
+				enumClasses.add(anEnumField.getEnumClass());
+			}
+			else{
+				throw new IllegalArgumentException("Duplicate enum class found among the declared allowed enum fields : "
+						+anEnumField.getEnumClass().getName());
+			}
+		}
+		
+		return enumClasses;
+	}
+	
+	private EnumFields getEnumField(Class<?> enumClass){
+		
+		if(allowedEnumFields == null || allowedEnumFields.isEmpty()){
+			throw new IllegalArgumentException("No enumFields declared in the overridden getAllowedSettingsEnum() method");
+		}
+		
+		for(EnumFields enumField : allowedEnumFields){
+			if(enumClass.equals(enumField.getEnumClass())){
+				return enumField;
+			}
+		}
+		
+		throw new IllegalArgumentException("enum class not found among the list of the declared allowable Enum Fields. Please add the enum class " +
+				"to one of the enum fields returned in the overriden method getAllowedSettingsEnum()");
+	}
+    
+	private void validateEnumObject(Enum<?> enumObject){
+    	if(allowedEnumClasses == null || allowedEnumClasses.isEmpty()){
+			throw new UtilException("No allowed EnumFields declared. Override the getAllowedSettingsEnum() method and " +
+					"set this class as the enumClass field of one of the returned EnumFields in the list");
+    	}
+		if(!allowedEnumClasses.contains(enumObject.getClass())){
+			throw new UtilException("The object's class must be set as the enumClass field of one of the returned EnumFields in the list");
+		}
+	}
+	
+	protected T getSettingByName(Enum<?> enumObject, Object... orderedGridUniqueSettingsValues) {
+		validateEnumObject(enumObject); 
+		SettingsReplica settingsReplica = getSettingsReplica(enumObject, null, null);
+		return doGetSettingByName(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+
+	protected T getSettingByName(Enum<?> enumObject, String defaultValue, boolean createIfNotExist, Object... orderedGridUniqueSettingsValues) {
+		validateEnumObject(enumObject); 
+		SettingsReplica settingsReplica = getSettingsReplica(enumObject, defaultValue, createIfNotExist);
+		return doGetSettingByName(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+	
+	private T doGetSettingByName(SettingsReplica settingsReplica, Object... orderedGridUniqueSettingsValues) {
+		return getSettingByName(settingsReplica.name, settingsReplica.value, settingsReplica.description, settingsReplica.createIfNotExist, orderedGridUniqueSettingsValues);
+	}
+
+	protected String getSettingValue(Enum<?> enumObject, Object... orderedGridUniqueSettingsValues) {
+		validateEnumObject(enumObject); 
+		SettingsReplica settingsReplica = getSettingsReplica(enumObject, null, null);
+		return doGetSettingValue(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+
+	protected String getSettingValue(Enum<?> enumObject, String defaultValue, boolean createIfNotExist, Object... orderedGridUniqueSettingsValues) {
+		validateEnumObject(enumObject); 
+		SettingsReplica settingsReplica = getSettingsReplica(enumObject, defaultValue, createIfNotExist);
+		return doGetSettingValue(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+	
+	private String doGetSettingValue(SettingsReplica settingsReplica, Object... orderedGridUniqueSettingsValues) {
+		return getSettingValue(settingsReplica.name, settingsReplica.value, settingsReplica.description, settingsReplica.createIfNotExist, orderedGridUniqueSettingsValues);
+	}
+
+	protected Integer getSettingIntValue(Enum<?> enumObject, Object... orderedGridUniqueSettingsValues) {
+		validateEnumObject(enumObject); 
+		SettingsReplica settingsReplica = getSettingsReplica(enumObject, null, null);
+		return doGetSettingIntValue(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+
+	protected Integer getSettingIntValue(Enum<?> enumObject, Integer defaultValue, boolean createIfNotExist, Object... orderedGridUniqueSettingsValues) {
+		validateEnumObject(enumObject); 
+		SettingsReplica settingsReplica = getSettingsReplica(enumObject, defaultValue, createIfNotExist);
+		return doGetSettingIntValue(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+	
+	private Integer doGetSettingIntValue(SettingsReplica settingsReplica, Object... orderedGridUniqueSettingsValues) {
+		Integer defaultValue = null;
+		try {
+			if(settingsReplica.value != null){
+				defaultValue = Integer.valueOf(settingsReplica.value);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return getSettingIntValue(settingsReplica.name, defaultValue, settingsReplica.description, settingsReplica.createIfNotExist, orderedGridUniqueSettingsValues);
+	}
+
+	protected Long getSettingLongValue(Enum<?> enumObject, Object... orderedGridUniqueSettingsValues) {
+		validateEnumObject(enumObject); 
+		SettingsReplica settingsReplica = getSettingsReplica(enumObject, null, null);
+		return doGetSettingLongValue(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+
+	protected Long getSettingLongValue(Enum<?> enumObject, Long defaultValue, boolean createIfNotExist, Object... orderedGridUniqueSettingsValues) {
+		validateEnumObject(enumObject); 
+		SettingsReplica settingsReplica = getSettingsReplica(enumObject, defaultValue, createIfNotExist);
+		return doGetSettingLongValue(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+	
+	private Long doGetSettingLongValue(SettingsReplica settingsReplica, Object... orderedGridUniqueSettingsValues) {
+		Long defaultValue = null;
+		try {
+			if(settingsReplica.value != null){
+				defaultValue = Long.valueOf(settingsReplica.value);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return getSettingLongValue(settingsReplica.name, defaultValue, settingsReplica.description, settingsReplica.createIfNotExist, orderedGridUniqueSettingsValues);
+	}
+
+	protected Float getSettingFloatValue(Enum<?> enumObject, Object... orderedGridUniqueSettingsValues) {
+		validateEnumObject(enumObject); 
+		SettingsReplica settingsReplica = getSettingsReplica(enumObject, null, null);
+		return dogetSettingFloatValue(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+
+	protected Float getSettingFloatValue(Enum<?> enumObject, Float defaultValue, boolean createIfNotExist, Object... orderedGridUniqueSettingsValues) {
+		validateEnumObject(enumObject); 
+		SettingsReplica settingsReplica = getSettingsReplica(enumObject, defaultValue, createIfNotExist);
+		return dogetSettingFloatValue(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+	
+	private Float dogetSettingFloatValue(SettingsReplica settingsReplica, Object... orderedGridUniqueSettingsValues) {
+		Float defaultValue = null;
+		try {
+			if(settingsReplica.value != null){
+				defaultValue = Float.valueOf(settingsReplica.value);
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return getSettingFloatValue(settingsReplica.name, defaultValue, settingsReplica.description, settingsReplica.createIfNotExist, orderedGridUniqueSettingsValues);
+	}
+
+	protected Boolean getSettingBooleanValue(Enum<?> enumObject, Object... orderedGridUniqueSettingsValues) {
+		validateEnumObject(enumObject); 
+		SettingsReplica settingsReplica = getSettingsReplica(enumObject, null, null);
+		return dogetSettingBooleanValue(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+
+	protected Boolean getSettingBooleanValue(Enum<?> enumObject, Boolean defaultValue, boolean createIfNotExist, Object... orderedGridUniqueSettingsValues) {
+		validateEnumObject(enumObject); 
+		SettingsReplica settingsReplica = getSettingsReplica(enumObject, defaultValue, createIfNotExist);
+		return dogetSettingBooleanValue(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+	
+	private Boolean dogetSettingBooleanValue(SettingsReplica settingsReplica, Object... orderedGridUniqueSettingsValues) {
+		Boolean defaultValue = null;
+		try {
+			if(settingsReplica.value != null){
+//				The actual overridden true value in use is better than assuming the extending class used the default
+				if(settingsReplica.value.trim().equalsIgnoreCase(TRUE)){ 
+					defaultValue = Boolean.TRUE;
+				}
+				else{
+					defaultValue = Boolean.FALSE;
+				}
+			}
+		} catch (Exception e) {
+			log.error(e.getMessage(), e);
+		}
+		return getSettingBooleanValue(settingsReplica.name, defaultValue, settingsReplica.description, settingsReplica.createIfNotExist, orderedGridUniqueSettingsValues);
+	}
+	
+    private static class SettingsReplica{
+    	private String name;
+    	private String value;
+    	private String description;
+    	private boolean createIfNotExist;
+    	
+		public SettingsReplica(String name, String value, String description,boolean createIfNotExist) {
+			this.name = name;
+			this.value = value;
+			this.description = description;
+			this.createIfNotExist = createIfNotExist;
+		}
     }
     
 }

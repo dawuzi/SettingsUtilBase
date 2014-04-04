@@ -1,5 +1,8 @@
 package bgn.settings;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
 * This wrapper class eases the implementation of settings util in projects 
 * by presenting a generic settings util class that can be extended
@@ -14,6 +17,9 @@ package bgn.settings;
 
 public abstract class SimpleSettingsUtilBase<T> extends SettingsUtilBase<T> {
 
+    @SuppressWarnings("unused")
+	private final Logger log = LoggerFactory.getLogger(SimpleSettingsUtilBase.class);
+	
 	public SimpleSettingsUtilBase(Class<T> clazz) {
 		super(false, clazz);
 	}
@@ -57,4 +63,53 @@ public abstract class SimpleSettingsUtilBase<T> extends SettingsUtilBase<T> {
 		return super.getSettingBooleanValue(settingName, defaultValue, defaultDescription, createIfNotExist);
 	}
 
+	public T getSettingByName(Enum<?> enumObject) {
+		return super.getSettingByName(enumObject);
+	}
+
+	protected T getSettingByName(Enum<?> enumObject, String defaultValue, boolean createIfNotExist) {
+		return super.getSettingByName(enumObject, defaultValue,createIfNotExist);
+	}
+
+	protected String getSettingValue(Enum<?> enumObject) {
+		return super.getSettingValue(enumObject);
+	}
+
+	protected String getSettingValue(Enum<?> enumObject, String defaultValue, boolean createIfNotExist) {
+		return super.getSettingValue(enumObject, defaultValue,createIfNotExist);
+	}
+	
+	protected Integer getSettingIntValue(Enum<?> enumObject) {
+		return super.getSettingIntValue(enumObject);
+	}
+
+	protected Integer getSettingIntValue(Enum<?> enumObject, Integer defaultValue, boolean createIfNotExist) {
+		return super.getSettingIntValue(enumObject, defaultValue,createIfNotExist);
+	}
+
+	protected Long getSettingLongValue(Enum<?> enumObject) {
+		return super.getSettingLongValue(enumObject);
+	}
+
+	protected Long getSettingLongValue(Enum<?> enumObject, Long defaultValue, boolean createIfNotExist) {
+		return super.getSettingLongValue(enumObject, defaultValue,createIfNotExist);
+	}
+
+	protected Float getSettingFloatValue(Enum<?> enumObject) {
+		return super.getSettingFloatValue(enumObject);
+	}
+
+	protected Float getSettingFloatValue(Enum<?> enumObject, Float defaultValue, boolean createIfNotExist) {
+		return super.getSettingFloatValue(enumObject, defaultValue,createIfNotExist);
+	}
+	
+	protected Boolean getSettingBooleanValue(Enum<?> enumObject) {
+		return super.getSettingBooleanValue(enumObject);
+	}
+
+	protected Boolean getSettingBooleanValue(Enum<?> enumObject, Boolean defaultValue, boolean createIfNotExist) {
+		return super.getSettingBooleanValue(enumObject, defaultValue,createIfNotExist);
+	}
+	
+    
 }
