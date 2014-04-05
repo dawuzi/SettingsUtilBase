@@ -37,6 +37,30 @@ public class EnumFields {
 		if(enumConstants == null){
 			throw new IllegalArgumentException("The clazz must be an enum class");
 		}
+		
+		if(SUBUtils.isAnyArgumentNull(defaultDescriptionFieldName, defaultValueFieldName, createIfNotExistFieldName)){
+			throw new IllegalArgumentException("Neither defaultDescriptionFieldName, defaultValueFieldName, " +
+					"createIfNotExistFieldName arguments can be null or empty. defaultDescriptionFieldName : -"+defaultDescriptionFieldName+"-, " +
+					"defaultValueFieldName : -"+defaultValueFieldName+"-, createIfNotExistFieldName : -"+createIfNotExistFieldName+"-");
+		}
+		
+		defaultDescriptionFieldName = defaultDescriptionFieldName.trim();
+		defaultValueFieldName = defaultValueFieldName.trim();
+		createIfNotExistFieldName = createIfNotExistFieldName.trim();
+		
+		
+		if(defaultDescriptionFieldName.equals(defaultValueFieldName)){
+			throw new IllegalArgumentException("The defaultDescriptionFieldName and defaultValueFieldName arguments are equal");
+		}
+		
+		if(defaultDescriptionFieldName.equals(createIfNotExistFieldName)){
+			throw new IllegalArgumentException("The defaultDescriptionFieldName and createIfNotExistFieldName arguments are equal");
+		}
+		
+		if(defaultValueFieldName.equals(createIfNotExistFieldName)){
+			throw new IllegalArgumentException("The defaultValueFieldName and createIfNotExistFieldName arguments are equal");
+		}
+		
 		if(enumConstants.length == 0){
 			log.warn("This enum class "+enumClass.getName()+" does not have any enum elements");
 		}else{

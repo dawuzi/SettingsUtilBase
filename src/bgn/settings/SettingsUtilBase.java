@@ -737,7 +737,13 @@ public abstract class SettingsUtilBase<T> {
 		}
 		String name = enumObject.name();
 		
-		return new SettingsReplica(name, value.toString(), description, createIfNotExist);
+		String valueString = null;
+		
+		if(value != null){
+			valueString = value.toString();
+		}
+		
+		return new SettingsReplica(name, valueString, description, createIfNotExist);
 	}
     
     private void validateAllowedEnumFields() {
@@ -933,6 +939,10 @@ public abstract class SettingsUtilBase<T> {
 		validateEnumObject(enumObject); 
 		SettingsReplica settingsReplica = getSettingsReplica(enumObject, defaultValue, createIfNotExist);
 		return dogetSettingBooleanValue(settingsReplica, orderedGridUniqueSettingsValues); 
+	}
+	
+	public void clearCache(){
+		settingsCache.clear();
 	}
 	
 	private Boolean dogetSettingBooleanValue(SettingsReplica settingsReplica, Object... orderedGridUniqueSettingsValues) {
