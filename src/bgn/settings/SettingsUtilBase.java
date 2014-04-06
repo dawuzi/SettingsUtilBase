@@ -196,6 +196,10 @@ public abstract class SettingsUtilBase<T> {
             throw new IllegalArgumentException("setting name is empty");
         }
         
+        if(createIfNotExist && ((defaultValue == null) || (defaultValue.trim().equals("")) )){
+            throw new IllegalArgumentException("A defaultValue must be specified if createIfNotExist is true");
+        }
+        
         validateOrderedGridUniqueSettingsValues(orderedGridUniqueSettingsValues);
         
         try{
