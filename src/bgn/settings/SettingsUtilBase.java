@@ -197,7 +197,7 @@ public abstract class SettingsUtilBase<T> {
         }
         
         if(createIfNotExist && ((defaultValue == null) || (defaultValue.trim().equals("")) )){
-            throw new IllegalArgumentException("A defaultValue must be specified if createIfNotExist is true");
+            throw new IllegalArgumentException("A defaultValue must be specified if createIfNotExist is true. Error settings name : "+settingName);
         }
         
         validateOrderedGridUniqueSettingsValues(orderedGridUniqueSettingsValues);
@@ -880,7 +880,7 @@ public abstract class SettingsUtilBase<T> {
 				defaultValue = Integer.valueOf(settingsReplica.value);
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			throw new IllegalArgumentException("Invalid enum Integer default value : "+settingsReplica.value, e);
 		}
 		return getSettingIntValue(settingsReplica.name, defaultValue, settingsReplica.description, settingsReplica.createIfNotExist, orderedGridUniqueSettingsValues);
 	}
@@ -904,7 +904,7 @@ public abstract class SettingsUtilBase<T> {
 				defaultValue = Long.valueOf(settingsReplica.value);
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			throw new IllegalArgumentException("Invalid enum Long default value : "+settingsReplica.value, e);
 		}
 		return getSettingLongValue(settingsReplica.name, defaultValue, settingsReplica.description, settingsReplica.createIfNotExist, orderedGridUniqueSettingsValues);
 	}
@@ -928,7 +928,7 @@ public abstract class SettingsUtilBase<T> {
 				defaultValue = Float.valueOf(settingsReplica.value);
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			throw new IllegalArgumentException("Invalid enum Float default value : "+settingsReplica.value, e);
 		}
 		return getSettingFloatValue(settingsReplica.name, defaultValue, settingsReplica.description, settingsReplica.createIfNotExist, orderedGridUniqueSettingsValues);
 	}

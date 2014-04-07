@@ -57,6 +57,12 @@ public class SUBUtils {
 		
 		String getGetterMethodName = GET + methodSuffix;
 		
+		Method getGetterMethod = clazz.getMethod(getGetterMethodName);
+		
+		if(getGetterMethod.getReturnType().equals(Void.class)){
+			throw new UtilException("The getter method "+getGetterMethodName+" does not return value"); 
+		}
+		
 		return clazz.getMethod(getGetterMethodName);
 		
 	}
